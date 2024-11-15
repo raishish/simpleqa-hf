@@ -17,7 +17,7 @@ pip install -r requirements.txt
 To run the main script, use the following command:
 
 ```sh
-python simpleqa_eval_hf.py --model <model_name> --grader_model <grader_model_name> [options]
+HF_TOKEN='' python simpleqa_eval_hf.py --model <model_name> --grader_model <grader_model_name> [options]
 ```
 
 ### Arguments
