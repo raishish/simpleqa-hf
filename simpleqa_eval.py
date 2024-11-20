@@ -1,6 +1,5 @@
 import random
 import re
-# import blobfile as bf
 import pandas as pd
 from tqdm import tqdm
 from typing import List, Dict
@@ -91,30 +90,27 @@ Just return the letters "A", "B", or "C", with no text around it.
 
 
 class SimpleQAEval(Eval):
-    def __init__(self, grader_model: SamplerBase, num_examples: int | None = None, n_repeats: int = 1):
-        # df = pd.read_csv(
-        #     bf.BlobFile(
-        #         "https://openaipublic.blob.core.windows.net/simple-evals/simple_qa_test_set.csv"
-        #     )
-        # )
-        df = pd.read_csv(
-            "https://openaipublic.blob.core.windows.net/simple-evals/simple_qa_test_set.csv"
-        )
-        examples = [row.to_dict() for _, row in df.iterrows()]
+    # Bypass Azure Blob Storage authentication
+    df = pd.read_csv(
+        "https://openaipublic.blob.core.windows.net/simple-evals/simple_qa_test_set.csv"
+    )
+    all_examples = [row.to_dict() for _, row in df.iterrows()]
+
+    @staticmethod
+    def generate_responses(model: SamplerBase, num_examples: int | None = None, n_repeats: int = 1) -> List[Dict]:
+        examples = SimpleQAEval.all_examples
         if num_examples:
             assert n_repeats == 1, "n_repeats only supported when max_examples = None"
             rng = random.Random(0)
-            examples = rng.sample(examples, num_examples)
-        self.examples = examples * n_repeats
-        self.grader_model = grader_model
+            examples = rng.sample(SimpleQAEval.all_examples, num_examples)
+        examples = examples * n_repeats
 
-    def generate_responses(self, sampler: SamplerBase) -> List[Dict]:
         responses = []
-        for ex in tqdm(self.examples):
+        for ex in tqdm(examples):
             prompt_messages = [
-                sampler._pack_message(content=ex["problem"], role="user")
+                model._pack_message(content=ex["problem"], role="user")
             ]
-            response = sampler(prompt_messages)
+            response = model(prompt_messages)
             responses.append({
                 "prompt_messages": prompt_messages,
                 "problem": ex["problem"],
@@ -123,7 +119,8 @@ class SimpleQAEval(Eval):
             })
         return responses
 
-    def grade_response(self, question: str, target: str, predicted_answer: str) -> str:
+    @staticmethod
+    def grade_response(grader_model: SamplerBase, question: str, target: str, predicted_answer: str) -> str:
         grader_prompt = GRADER_TEMPLATE.format(
             question=question,
             target=target,
@@ -131,18 +128,21 @@ class SimpleQAEval(Eval):
         )
 
         prompt_messages = [
-            self.grader_model._pack_message(content=grader_prompt, role="user")
+            grader_model._pack_message(content=grader_prompt, role="user")
         ]
-        grading_response = self.grader_model(prompt_messages)
+        grading_response = grader_model(prompt_messages)
 
         match = re.search(r"(A|B|C)", grading_response)
         # Default to "NOT_ATTEMPTED" if no match
         return match.group(0) if match else "C"
 
-    def evaluate(self, responses: List[Dict]) -> EvalResult:
+    @staticmethod
+    def evaluate(grader_model: SamplerBase, responses: List[Dict]) -> EvalResult:
         def fn(result: Dict):
-            grade_letter = self.grade_response(
-                result["problem"], result["answer"], result["response"])
+            grade_letter = SimpleQAEval.grade_response(
+                grader_model,
+                result["problem"], result["answer"], result["response"]
+            )
 
             # Metrics based on grading response
             is_correct = grade_letter == "A"

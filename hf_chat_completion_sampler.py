@@ -16,7 +16,7 @@ class HFChatCompletionSampler(SamplerBase):
         device: str = "cuda" if torch.cuda.is_available() else "cpu"
     ):
         self.tokenizer = AutoTokenizer.from_pretrained(model)
-        self.model = AutoModelForCausalLM.from_pretrained(model).to(device)
+        self.model = AutoModelForCausalLM.from_pretrained(model, device_map="auto").to(device)
         self.system_message = system_message
         self.max_tokens = max_tokens
         self.temperature = temperature
@@ -45,7 +45,7 @@ class HFChatCompletionSampler(SamplerBase):
         prompt = self._pack_message_to_string(message_list)
 
         # Generate response
-        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
         outputs = self.model.generate(
             **inputs,
             do_sample=True,
