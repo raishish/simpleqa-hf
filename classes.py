@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Union, List, Dict, Any
 
 Message = dict[str, Any]  # keys role, content
-MessageList = list[Message]
+MessageList = List[Message]
 
 
 class SamplerBase:
@@ -21,10 +21,10 @@ class EvalResult:
     Result of running an evaluation (usually consisting of many samples)
     """
 
-    score: float | None  # top-line metric
-    metrics: dict[str, float] | None  # other metrics
-    htmls: list[str]  # strings of valid HTML
-    convos: list[MessageList]  # sampled conversations
+    score: Union[float, None]  # top-line metric
+    metrics: Union[Dict[str, float], None]  # other metrics
+    htmls: List[str]  # strings of valid HTML
+    convos: List[MessageList]  # sampled conversations
 
 
 @dataclass
@@ -33,10 +33,10 @@ class SingleEvalResult:
     Result of evaluating a single sample
     """
 
-    score: float | None
-    metrics: dict[str, float] = field(default_factory=dict)
-    html: str | None = None
-    convo: MessageList | None = None  # sampled conversation
+    score: Union[float, None]
+    metrics: Dict[str, float] = field(default_factory=dict)
+    html: Union[str, None] = None
+    convo: Union[MessageList, None] = None  # sampled conversation
 
 
 class Eval:

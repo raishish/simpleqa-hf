@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Union
 from classes import MessageList, SamplerBase
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
@@ -9,8 +9,8 @@ class HFChatCompletionSampler(SamplerBase):
     def __init__(
         self,
         model: str,
-        API_TOKEN: str | None = os.environ.get("HF_TOKEN", None),
-        system_message: str | None = None,
+        API_TOKEN: Union[str, None] = os.environ.get("HF_TOKEN", None),
+        system_message: Union[str, None] = None,
         max_tokens: int = 1024,
         temperature: float = 0.7,
         device: str = "cuda" if torch.cuda.is_available() else "cpu"

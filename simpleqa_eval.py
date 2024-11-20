@@ -2,7 +2,7 @@ import random
 import re
 import pandas as pd
 from tqdm import tqdm
-from typing import List, Dict
+from typing import List, Dict, Union
 import common
 from classes import SamplerBase, EvalResult, SingleEvalResult, Eval
 
@@ -97,7 +97,7 @@ class SimpleQAEval(Eval):
     all_examples = [row.to_dict() for _, row in df.iterrows()]
 
     @staticmethod
-    def generate_responses(model: SamplerBase, num_examples: int | None = None, n_repeats: int = 1) -> List[Dict]:
+    def generate_responses(model: SamplerBase, num_examples: Union[int, None] = None, n_repeats: int = 1) -> List[Dict]:
         examples = SimpleQAEval.all_examples
         if num_examples:
             assert n_repeats == 1, "n_repeats only supported when max_examples = None"

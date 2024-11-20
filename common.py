@@ -1,7 +1,7 @@
 import os
 from collections import defaultdict
 from multiprocessing.pool import ThreadPool
-from typing import Any
+from typing import Any, Union
 
 import jinja2
 import numpy as np
@@ -40,7 +40,7 @@ def _compute_stat(values: list, stat: str):
 def aggregate_results(
     single_eval_results: list[SingleEvalResult],
     default_stats: tuple[str] = ("mean", "std"),
-    name2stats: dict[str, tuple[str]] | None = None,
+    name2stats: Union[dict[str, tuple[str]], None] = None,
 ) -> EvalResult:
     """
     Aggregate results from multiple evaluations into a single EvalResult.
