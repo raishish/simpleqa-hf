@@ -4,5 +4,4 @@ tqdm
 numpy
 pandas
 jinja2
-blobfile
 accelerate
