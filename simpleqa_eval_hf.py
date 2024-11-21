@@ -13,6 +13,7 @@ def main():
     # Response generation
     parser.add_argument("--generate_responses", action="store_true", default=False)
     parser.add_argument("--model_name_hf", type=str)
+    parser.add_argument("--model_dir", type=str, default=None)
     parser.add_argument("--system_message", type=str, default=None)
     parser.add_argument("--max_tokens", type=int, default=1024)
     parser.add_argument("--temperature", type=float, default=0.7)
@@ -23,6 +24,7 @@ def main():
     parser.add_argument("--grade_responses", action="store_true", default=False)
     parser.add_argument("--responses_file", type=Path)
     parser.add_argument("--grader_model_name_hf", type=str)
+    parser.add_argument("--grader_model_dir", type=str, default=None)
     parser.add_argument("--grader_max_tokens", type=int, default=1024)
     parser.add_argument("--grader_temperature", type=float, default=0.7)
     parser.add_argument("--grader_device", type=str)
@@ -37,10 +39,12 @@ def main():
     responses = None
 
     if args.generate_responses:
-        assert args.model_name_hf, "model_name_hf must be provided if --generate_responses is True"
+        assert args.model_name_hf or args.model_dir, \
+            "model_name_hf or model_dir must be provided if --generate_responses is True"
 
         model = HFChatCompletionSampler(
             model=args.model_name_hf,
+            model_dir=args.model_dir,
             API_TOKEN=os.environ.get("HF_TOKEN", None),
             system_message=args.system_message,
             max_tokens=args.max_tokens,
@@ -71,6 +75,8 @@ def main():
 
     if args.grade_responses:
         assert responses or args.responses_file, "responses_file must be provided if --grade_responses is True"
+        assert args.grader_model_name_hf or args.grader_model_dir, \
+            "grader_model_name_hf or grader_model_dir must be provided if --grade_responses is True"
 
         if not responses:
             responses = json.load(open(args.responses_file))
@@ -84,6 +90,7 @@ def main():
         # System message for the grader model is defined in simpleqa_eval.py
         grader_model = HFChatCompletionSampler(
             model=args.grader_model_name_hf,
+            model_dir=args.grader_model_dir,
             API_TOKEN=os.environ.get("HF_TOKEN", None),
             max_tokens=args.grader_max_tokens,
             temperature=args.grader_temperature,

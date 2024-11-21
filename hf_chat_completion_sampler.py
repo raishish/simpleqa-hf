@@ -9,18 +9,22 @@ class HFChatCompletionSampler(SamplerBase):
     def __init__(
         self,
         model: str,
+        model_dir: Union[str, None] = None,
         API_TOKEN: Union[str, None] = os.environ.get("HF_TOKEN", None),
         system_message: Union[str, None] = None,
         max_tokens: int = 1024,
         temperature: float = 0.7,
         device: str = "cuda" if torch.cuda.is_available() else "cpu"
     ):
-        self.tokenizer = AutoTokenizer.from_pretrained(model)
-        self.model = AutoModelForCausalLM.from_pretrained(model, device_map="auto").to(device)
+        if model_dir:
+            self.tokenizer = AutoTokenizer.from_pretrained(model_dir)
+            self.model = AutoModelForCausalLM.from_pretrained(model_dir, device_map="auto")
+        else:
+            self.tokenizer = AutoTokenizer.from_pretrained(model)
+            self.model = AutoModelForCausalLM.from_pretrained(model, device_map="auto")
         self.system_message = system_message
         self.max_tokens = max_tokens
         self.temperature = temperature
-        self.device = device
 
     def _pack_message(self, role: str, content: Any) -> Dict:
         return {"role": str(role), "content": str(content)}
